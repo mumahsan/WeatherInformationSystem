@@ -1,4 +1,4 @@
-# A Weather Information System written using Simple JQuery
+# A Weather Information System written using Simple JQuery Library
 
 "Weather Information System" is a small JQuery project that makes use of the Wunderground service for fetching and displaying weather data and forecasts based on a given location (city of Texas).
 #Installation
