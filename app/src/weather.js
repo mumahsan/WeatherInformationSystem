@@ -2,8 +2,8 @@ var weather = (function ($) {
     "use strict";
     var constants = {
         endpoints: {
-            conditions : "",
-            forecast: ""
+            conditions : "http://api.wunderground.com/api/76c2d7e45d437adc/conditions/q/TX/{selectedCity}.json",
+            forecast : "http://api.wunderground.com/api/76c2d7e45d437adc/forecast/q/TX/{selectedCity}.json"
         }
     },
         properties = {
@@ -21,14 +21,15 @@ var weather = (function ($) {
             third: ""
         },
         methods = (function (p, c) {
-            var getWeather = function () {
-                c.endpoints.conditions = "http://api.wunderground.com/api/76c2d7e45d437adc/conditions/q/TX/"+app.properties.selectedCity+".json";
-                c.endpoints.forecast ="http://api.wunderground.com/api/76c2d7e45d437adc/forecast/q/TX/"+app.properties.selectedCity+".json";
-               ajaxCallForCurrentTemperature();
+            var getForeCast = function () {
+               ajaxCallForForeCasting();
            },
+            getCurrentConditions = function () {
+                ajaxCallForCurrentTemperature();
+            },
            ajaxCallForCurrentTemperature = function (){
                $.ajax({
-                  url : c.endpoints.conditions,
+                  url : c.endpoints.conditions.replace("{selectedCity}", app.properties.selectedCity),
                   dataType : "jsonp",
                   success : function(parsed_json) {
                       if(parsed_json.response.error) {
@@ -40,28 +41,32 @@ var weather = (function ($) {
                           p.currentWeather.wind_speed = parsed_json['current_observation']['wind_mph'];
                           p.currentWeather.humidity = parsed_json['current_observation']['relative_humidity'];
                           p.currentWeather.weather = parsed_json['current_observation']['weather'];
-                          ajaxCallForForeCasting();
                           $(".details-data").html("");
                           $(".details-data").append("<button class='current-weather-detail btn btn-default'>View Current Weather Details</button>");
+                          displayWeatherData();
                       }
                   },
                     error: function(XMLHttpRequest, textStatus, errorThrown) { 
-                        alertn("API service is down"); 
+                        alert("API service is down");
                     }
-                })
+                });
            }, 
             ajaxCallForForeCasting = function (){
                 $.ajax({
-                  url : c.endpoints.forecast,
+                  url : c.endpoints.forecast.replace("{selectedCity}", app.properties.selectedCity),
                   dataType : "jsonp",
                   success : function(parsed_json) {
-                      p.current = parsed_json['forecast']['simpleforecast']['forecastday'][0],
-                      p.first = parsed_json['forecast']['simpleforecast']['forecastday'][1],
-                      p.second = parsed_json['forecast']['simpleforecast']['forecastday'][2],
-                      p.third = parsed_json['forecast']['simpleforecast']['forecastday'][3];
-                      displayWeatherData();
+                      if(parsed_json.response.error) {
+                          alert(parsed_json.response.error.description);
+                      } else {
+                          p.current = parsed_json['forecast']['simpleforecast']['forecastday'][0],
+                          p.first = parsed_json['forecast']['simpleforecast']['forecastday'][1],
+                          p.second = parsed_json['forecast']['simpleforecast']['forecastday'][2],
+                          p.third = parsed_json['forecast']['simpleforecast']['forecastday'][3];
+                          getCurrentConditions();
+                      }
                   }
-                })
+                });
             },
             displayWeatherData = function (){
                 $(".title").text("Weather Updates of "+app.properties.selectedCity);
@@ -101,7 +106,7 @@ var weather = (function ($) {
             },
             init = function() {
                    listener();
-                   getWeather();
+                   getForeCast();
             };
             return init;
         }(properties, constants));

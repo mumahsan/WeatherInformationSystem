@@ -1,6 +1,11 @@
 var app = (function () {
         "use strict";
-    var properties = {
+    var constants = {
+            endpoints: {
+                allTexasCities: "http://api.wunderground.com/api/76c2d7e45d437adc/conditions/q/TX.json",
+            }
+        },
+    properties = {
          cities: ["Austin"],
          selectedCity: ""
     },
@@ -9,9 +14,13 @@ var app = (function () {
                 var input = $("input[name=input-city]").val();
                 if(input != ""){
                     $("input[name=input-city]").val("");
-                    properties.cities.push(input);
-                    $('.select-city').append($('<option>', {value:input, text:input}));
-                    alert("New City Added Successfully");
+                    if($.inArray(input, properties.cities) == -1) {
+                        properties.cities.push(input);
+                        $('.select-city').append($('<option>', {value:input, text:input}));
+                        alert("New City Added Successfully");
+                    } else {
+                        alert(input+" is allready in the list");
+                    }
                 } else {
                     alert("Please enter city");
                 }
@@ -24,6 +33,24 @@ var app = (function () {
                    properties.selectedCity = city;
                    weather($); 
                 }
+            })
+            $(".add-all-tx-cities").click(function() {
+                loadAllCitiesOfTexasAjaxCall();
+            });
+        },
+        loadAllCitiesOfTexasAjaxCall = function () {
+            $.ajax({
+              url : constants.endpoints.allTexasCities,
+              dataType : "jsonp",
+              success : function(parsed_json) {
+                  $(parsed_json['response']['results']).each(function(index, obj) {
+                      if($.inArray(obj.city, properties.cities) == -1) {
+                          properties.cities.push(obj.city);
+                        $('.select-city').append($('<option>', {value:obj.city, text:obj.city}));
+                      }
+                  });
+                  alert("All Cities of Texas are added");
+              }
             });
         },
         init = function() {
